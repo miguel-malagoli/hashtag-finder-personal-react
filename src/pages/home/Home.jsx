@@ -12,6 +12,13 @@ import './index.css';
 // Página principal
 export default class Home extends React.Component {
 
+    constructor(props) {
+        super(props);
+
+        let viewImage = function() {return undefined};
+        let changeTab = function() {return undefined};
+    }
+
     componentDidMount() {
 
         // Elementos das abas de resultado
@@ -355,6 +362,8 @@ export default class Home extends React.Component {
             tabs[0].tabIndex = newIndex;
             tabs[1].tabIndex = newIndex;
         }
+        this.viewImage = viewImage;
+        this.changeTab = changeTab;
     }
 
     render() {
@@ -404,13 +413,13 @@ export default class Home extends React.Component {
                     <div className="result__type">
                         {/* Tab de Imagens */}
                         <button className="result__tab tab"
-                            onClick="changeTab(0)"
+                            onClick={() => {this.changeTab(0)}}
                             tabIndex="0">
                             Imagens
                         </button>
                         {/* Tab de Tweets */}
                         <button className="result__tab tab tab_selected"
-                            onClick="changeTab(1)"
+                            onClick={() => {this.changeTab(1)}}
                             tabIndex="0">
                             Tweets
                         </button>
@@ -464,7 +473,7 @@ export default class Home extends React.Component {
                 {/* Visualização de imagem, só é visível quando uma imagem é clicada */}
                 <div className="view">
                     {/* Botão que esconde a visualização */}
-                    <button className="view__close button button_theme_light" onClick="viewImage(false)">
+                    <button className="view__close button button_theme_light" onClick={() => this.viewImage(false)}>
                         X
                     </button>
                     {/* Imagem do resultado, ampliada */}
