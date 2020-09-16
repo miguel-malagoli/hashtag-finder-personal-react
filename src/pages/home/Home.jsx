@@ -15,12 +15,216 @@ export default class Home extends React.Component {
     constructor(props) {
         super(props);
 
+        this.state = {
+            hashtag: '',
+            feedback: '',
+            isSearching: false
+        }
+
+        this.handleHashtag = this.handleHashtag.bind(this);
+        this.handleSearch = this.handleSearch.bind(this);
+
         let viewImage = function() {return undefined};
         let changeTab = function() {return undefined};
     }
 
-    componentDidMount() {
 
+    // Função que atualiza o input de busca conforme o usuário digita
+    handleHashtag(e) {
+        this.setState({hashtag: e.target.value});
+    }
+
+    // Função que inicia a requisição ao Twitter
+    handleSearch(e) {
+        // Se a tecla pressionada for Enter
+        if (e.keyCode == 13) {
+            // Prevenir qualquer outro comportamento associado à tecla
+            e.preventDefault();
+            // Remover símbolos não aceitos em hashtags
+            this.setState({hashtag: this.state.hashtag.replace(/[^a-zA-Z0-9_]/g, '')});
+            // Se uma busca está sendo realizada, instruir o usuário a aguardar
+            if (this.state.isSearching) {
+                this.setState({feedback: 'Aguarde a finalização da busca anterior'});
+                return;
+            // Se o campo estiver vazio, apenas informar o usuário quais caracteres são permitidos
+            } else if (this.state.feedback === '') {
+                this.setState({feedback: 'Digite algo no campo de busca (apenas letras, números e underlines)'});
+            // Se não, pedir o aguardo e realizar a busca
+            } else {
+                this.setState({
+                    feedback: 'Aguarde um momento...',
+                    isSearching: true
+                });
+            }
+        }
+    }
+
+    /*
+    // Função que busca tweets com a hashtag fornecida
+    search(hashtag) {
+        // Se uma busca está sendo realizada, instruir o usuário a aguardar
+        if (isSearching) {
+            searchFeedback.textContent = "Aguarde a finalização da busca anterior";
+            return;
+        }
+        // Marcar através da variável global que uma nova busca está em progresso
+        isSearching = true;
+
+        // Função que será atribuída à propriedade "onstatechange" das requisições ao Twitter
+        function displayResults() {
+            // Verificar se ambas as buscas estão completas
+            if (twitterRequest.readyState == 4 && twitterRequest.status == 200 &&
+                imageRequest.readyState == 4 && imageRequest.status == 200) {
+
+                // Transformar os resultados de ambas em JSON
+                let results = JSON.parse(twitterRequest.responseText);
+                let imageResults = JSON.parse(imageRequest.responseText);
+                // Variável que será usada para iterar os resultados
+                let tweet;
+
+                // Se não houver nenhum resultado
+                if (results.statuses.length <= 0 &&
+                    imageResults.statuses.length <= 0) {
+
+                    // Esconder o bloco dos resultados e notificar o usuário
+                    resultBlock.style.display = "";
+                    searchFeedback.textContent = "Não foi encontrado nenhum resultado :(";
+                    // Encerrar a busca
+                    isSearching = false;
+                    return;
+                }
+
+                // Para cada um dos 10 elementos de tweet/imagem no DOM
+                for (let i=0; i<10; i++) {
+                    // Resetar a visibilidade dos elementos em que ela está presente
+                    tweetBlocks[i].classList.remove('tweet_visible');
+                    images[i].classList.remove('image_visible');
+                    // Se houver um resultado para colocar no bloco de tweet "i"
+                    if (i < results.statuses.length) {
+                        // Marcar o tweet com a classe "content"
+                        tweet = results.statuses[i];
+                        tweetBlocks[i].classList.add('tweet_content');
+                        // Atribuir aos elementos as propriedades do resultado
+                        tweetImages[i].src = tweet.user.profile_image_url_https;
+                        tweetNames[i].textContent = tweet.user.name;
+                        tweetNames[i].setAttribute(
+                            'title',
+                            tweetNames[i].textContent
+                        );
+                        tweetHandles[i].textContent = "@" + tweet.user.screen_name;
+                        tweetTexts[i].textContent = tweet.full_text;
+                        tweetLinks[i].parentElement.setAttribute(
+                            'href',
+                            "https://twitter.com/" + tweet.user.screen_name
+                        );
+                        tweetLinks[i].parentElement.tabIndex = "0";
+                    // Se NÃO houver um resultado para colocar no bloco de tweet "i"
+                    } else {
+                        // Remover o marcador de "content" caso ele exista por causa de uma pesquisa anterior
+                        tweetBlocks[i].classList.remove('tweet_content');
+                        tweetLinks[i].parentElement.tabIndex = "-1";
+                    }
+
+                    // Se houver um resultado para colocar no bloco de imagem "i"
+                    if (i < imageResults.statuses.length) {
+                        // Marcar a imagem com a classe "content"
+                        images[i].classList.add('image_content');
+                        // Atribuir aos elementos as propriedades do resultado
+                        images[i].tabIndex = "0"
+                        images[i].setAttribute(
+                            'data-src',
+                            imageResults.statuses[i].entities.media[0].media_url_https
+                        );
+                        images[i].style.background =
+                            "linear-gradient(180deg, #00000000 0%, #000000c4 100%) no-repeat, url(" +
+                            imageResults.statuses[i].entities.media[0].media_url_https + ") no-repeat";
+                        images[i].style.backgroundSize = "100% 40%, cover";
+                        images[i].style.backgroundPosition = "0% 100%, center";
+                        imageUsers[i].textContent = "@" + imageResults.statuses[i].user.screen_name;
+                        imageUsers[i].setAttribute(
+                            'title',
+                            imageUsers[i].textContent
+                        );
+                        imageUsers[i].parentElement.setAttribute(
+                            'href',
+                            "https://twitter.com/" + imageResults.statuses[i].user.screen_name
+                        );
+                        imageUsers[i].parentElement.tabIndex = "0";
+                    // Se NÃO houver um resultado para colocar no bloco de imagem "i"
+                    } else {
+                        // Remover o marcador de "content" caso ele exista por causa de uma pesquisa anterior
+                        images[i].classList.remove('image_content');
+                        images[i].tabIndex = "-1"
+                        imageUsers[i].parentElement.tabIndex = "-1";
+                    }
+                }
+                // Tornar o bloco de resultado visível sobrepondo o CSS
+                resultBlock.style.display = "block";
+                // Mover o scroll para o topo do bloco
+                resultBlock.scrollIntoView({behavior: "smooth", block: "start"});
+                // Atualizar o texto e encerrar a busca
+                searchFeedback.textContent = "";
+                searchText.textContent = hashtag;
+                isSearching = false;
+            }
+        }
+
+        // Criar as duas requisições que serão feitas
+        let twitterRequest = new XMLHttpRequest();
+        let imageRequest = new XMLHttpRequest();
+        // Atribuir a ambas a função displayResults() para quando as duas estiverem prontas
+        twitterRequest.onreadystatechange = function() {
+            displayResults();
+        }
+        imageRequest.onreadystatechange = function() {
+            displayResults();
+        }
+
+        // A primeira requisição busca todos os tweets com a hashtag fornecida
+        twitterRequest.open(
+            "GET",
+            // Parametros adicionais:
+            // - Excluir retweets
+            // - Excluir conteúdo potencialmente sensível
+            // - Ordenas por mais recente
+            // - Extender os tweets (impedir que acabem em "..." se forem longos)
+            // - Apenas 10 resultados
+            "https://cors-anywhere.herokuapp.com/https://api.twitter.com/1.1/search/tweets.json?q=%23" + 
+                hashtag + "%20-filter%3Aretweets%20filter%3Asafe&result_type=recent&tweet_mode=extended&count=10"
+        );
+        // Header HTTP de autorização
+        twitterRequest.setRequestHeader(
+            "Authorization",
+            "Bearer AAAAAAAAAAAAAAAAAAAAAH14HQEAAAAAlyRPi0Q1A7u87pMOdF2PPCKY7ME%3D7kmJegvv6xkK8aZH9ZFyr3KX4OVM3mPiyeFqpwDoarFuyMiJre"
+        );
+
+        // A segunda requisição busca apenas tweets com imagens contendo a hashtag fornecida
+        imageRequest.open(
+            "GET",
+            // Parametros adicionais:
+            // - Excluir retweets
+            // - Excluir conteúdo potencialmente sensível
+            // - Incluir apenas resultados contendo imagens
+            // - Ordenas por mais recente
+            // - Extender os tweets (impedir que acabem em "..." se forem longos)
+            // - Apenas 10 resultados
+            "https://cors-anywhere.herokuapp.com/https://api.twitter.com/1.1/search/tweets.json?q=%23" + 
+                hashtag + "%20-filter%3Aretweets%20filter%3Asafe%20filter%3Aimages&result_type=recent&tweet_mode=extended&count=10"
+        );
+        // Header HTTP de autorização
+        imageRequest.setRequestHeader(
+            "Authorization",
+            "Bearer AAAAAAAAAAAAAAAAAAAAAH14HQEAAAAAlyRPi0Q1A7u87pMOdF2PPCKY7ME%3D7kmJegvv6xkK8aZH9ZFyr3KX4OVM3mPiyeFqpwDoarFuyMiJre"
+        );
+
+        // Enviar as requisições e aguardar que displayResults() seja chamada
+        twitterRequest.send();
+        imageRequest.send();
+    }*/
+
+
+    componentDidMount() {
+        /*
         // Elementos das abas de resultado
         const tabs = document.querySelectorAll('.tab');
         const imageList = document.querySelector('.result__imageList');
@@ -364,6 +568,7 @@ export default class Home extends React.Component {
         }
         this.viewImage = viewImage;
         this.changeTab = changeTab;
+        */
     }
 
     render() {
@@ -400,10 +605,13 @@ export default class Home extends React.Component {
                             spellCheck="false"
                             maxLength="140"
                             tabIndex="0"
+                            onKeyDown={this.handleSearch}
+                            onChange={this.handleHashtag}
+                            value={this.state.hashtag}
                         />
                     </div>
                     {/* Texto que informa o usuário do estado atual da busca */}
-                    <p className="search__feedback"></p>
+                    <p className="search__feedback">{this.state.feedback}</p>
                 </main>
 
                 {/* Bloco dos resultados - visível somente após realizada uma busca */}
