@@ -1,0 +1,27 @@
+{
+  "files": {
+    "main.css": "/hashtag-finder-personal-react/static/css/main.e0614be5.chunk.css",
+    "main.js": "/hashtag-finder-personal-react/static/js/main.435ad290.chunk.js",
+    "main.js.map": "/hashtag-finder-personal-react/static/js/main.435ad290.chunk.js.map",
+    "runtime-main.js": "/hashtag-finder-personal-react/static/js/runtime-main.659a7688.js",
+    "runtime-main.js.map": "/hashtag-finder-personal-react/static/js/runtime-main.659a7688.js.map",
+    "static/js/2.8a8de1fc.chunk.js": "/hashtag-finder-personal-react/static/js/2.8a8de1fc.chunk.js",
+    "static/js/2.8a8de1fc.chunk.js.map": "/hashtag-finder-personal-react/static/js/2.8a8de1fc.chunk.js.map",
+    "index.html": "/hashtag-finder-personal-react/index.html",
+    "precache-manifest.a21df78e4aec260d143375777f25bcff.js": "/hashtag-finder-personal-react/precache-manifest.a21df78e4aec260d143375777f25bcff.js",
+    "service-worker.js": "/hashtag-finder-personal-react/service-worker.js",
+    "static/css/main.e0614be5.chunk.css.map": "/hashtag-finder-personal-react/static/css/main.e0614be5.chunk.css.map",
+    "static/js/2.8a8de1fc.chunk.js.LICENSE.txt": "/hashtag-finder-personal-react/static/js/2.8a8de1fc.chunk.js.LICENSE.txt",
+    "static/media/icon-home.svg": "/hashtag-finder-personal-react/static/media/icon-home.73f20eae.svg",
+    "static/media/icon-info-circle.svg": "/hashtag-finder-personal-react/static/media/icon-info-circle.9a629592.svg",
+    "static/media/icon-search.svg": "/hashtag-finder-personal-react/static/media/icon-search.54e49eef.svg",
+    "static/media/icon-user-alt.svg": "/hashtag-finder-personal-react/static/media/icon-user-alt.04feb91a.svg",
+    "static/media/logo.svg": "/hashtag-finder-personal-react/static/media/logo.dbc8b266.svg"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.659a7688.js",
+    "static/js/2.8a8de1fc.chunk.js",
+    "static/css/main.e0614be5.chunk.css",
+    "static/js/main.435ad290.chunk.js"
+  ]
+}
