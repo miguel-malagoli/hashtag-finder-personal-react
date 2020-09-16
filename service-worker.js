@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/hashtag-finder-personal-react/precache-manifest.a21df78e4aec260d143375777f25bcff.js"
+  "/hashtag-finder-personal-react/precache-manifest.9f3d8c3c072393fd75413ed1a33dd5d4.js"
 );
 
 self.addEventListener('message', (event) => {
