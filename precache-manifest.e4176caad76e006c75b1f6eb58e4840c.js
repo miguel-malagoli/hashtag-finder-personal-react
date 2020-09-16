@@ -1,11 +1,11 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "f25a7a3cf13780a37276e3cc37010dd0",
+    "revision": "2177241fcc604c01d4ab71df884cc3ac",
     "url": "/hashtag-finder-personal-react/index.html"
   },
   {
-    "revision": "274ee6c3e45ada0d8d0e",
-    "url": "/hashtag-finder-personal-react/static/css/main.b502cd91.chunk.css"
+    "revision": "76e87f2e7da7e2f93ba7",
+    "url": "/hashtag-finder-personal-react/static/css/main.4255e63d.chunk.css"
   },
   {
     "revision": "095d4d1d3cbcde36cf2d",
@@ -16,12 +16,16 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/hashtag-finder-personal-react/static/js/2.8a8de1fc.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "274ee6c3e45ada0d8d0e",
-    "url": "/hashtag-finder-personal-react/static/js/main.435ad290.chunk.js"
+    "revision": "76e87f2e7da7e2f93ba7",
+    "url": "/hashtag-finder-personal-react/static/js/main.31eda40f.chunk.js"
   },
   {
     "revision": "01c8cddecaeec50f093e",
     "url": "/hashtag-finder-personal-react/static/js/runtime-main.659a7688.js"
+  },
+  {
+    "revision": "25ecf2ba0019cbeeac869dd7dd2f3abf",
+    "url": "/hashtag-finder-personal-react/static/media/hero-bg.25ecf2ba.jpg"
   },
   {
     "revision": "73f20eae94916819886409ad4fd3d109",
