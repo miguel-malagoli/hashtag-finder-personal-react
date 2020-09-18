@@ -13,16 +13,25 @@ import './index.css';
 export default class Home extends React.Component {
 
     constructor(props) {
+        // Construtor base
         super(props);
-
+        // Propriedades de estado
         this.state = {
             hashtag: '',
+            searchHashtag: '',
+            resultHashtag: '',
             feedback: '',
-            isSearching: false
+            isSearching: false,
+            tweetPosts: [],
+            imagePosts: []
         }
-
+        // Bind de funções com "this"
         this.handleHashtag = this.handleHashtag.bind(this);
         this.handleSearch = this.handleSearch.bind(this);
+        this.handlePosts = this.handlePosts.bind(this);
+        this.handleScroll = this.handleScroll.bind(this);
+        // Refs a elementos renderizados
+        this.resultBlock = React.createRef();
 
         let viewImage = function() {return undefined};
         let changeTab = function() {return undefined};
@@ -32,6 +41,36 @@ export default class Home extends React.Component {
     // Função que atualiza o input de busca conforme o usuário digita
     handleHashtag(e) {
         this.setState({hashtag: e.target.value});
+    }
+
+    // Função que atualiza os elementos dos resultados da busca, atribuída ao "onstatechange" da requisição
+    handlePosts(twitterRequest, imageRequest) {
+        // Verificar se ambas as buscas estão completas
+        if (twitterRequest.readyState == 4 && twitterRequest.status == 200 &&
+            imageRequest.readyState == 4 && imageRequest.status == 200) {
+            // Transformar as respostas em JSON e isolar o array "statuses"
+            let tweets = JSON.parse(twitterRequest.responseText).statuses;
+            let images = JSON.parse(imageRequest.responseText).statuses;
+            // Atualizar os tweets e imagens
+            this.setState({
+                resultHashtag: this.state.searchHashtag,
+                tweetPosts: tweets,
+                imagePosts: images,
+                // Atualizar o feedback da busca
+                feedback: (
+                    tweets.length > 0 ||
+                    images.length > 0 ?
+                    // Apagar se houver resultados, avisar se não houver nenhum
+                    '' : 'Não foi encontrado nenhum resultado :('
+                ),
+                // Permitir o início de outra busca
+                isSearching: false
+            });
+            // Caso haja resultados, fazer o scroll até eles
+            if (this.resultBlock.current) {
+                this.resultBlock.current.scrollIntoView({behavior: "smooth", block: "start"});
+            }
+        }
     }
 
     // Função que inicia a requisição ao Twitter
@@ -47,183 +86,76 @@ export default class Home extends React.Component {
                 this.setState({feedback: 'Aguarde a finalização da busca anterior'});
                 return;
             // Se o campo estiver vazio, apenas informar o usuário quais caracteres são permitidos
-            } else if (this.state.feedback === '') {
+            } else if (this.state.hashtag === '') {
                 this.setState({feedback: 'Digite algo no campo de busca (apenas letras, números e underlines)'});
             // Se não, pedir o aguardo e realizar a busca
             } else {
                 this.setState({
+                    searchHashtag: this.state.hashtag,
                     feedback: 'Aguarde um momento...',
                     isSearching: true
                 });
+
+                // Criar as duas requisições que serão feitas
+                let twitterRequest = new XMLHttpRequest();
+                let imageRequest = new XMLHttpRequest();
+                // Atribuir a ambas a função displayResults() para quando as duas estiverem prontas
+                twitterRequest.onreadystatechange = () => {this.handlePosts(twitterRequest, imageRequest)};
+                imageRequest.onreadystatechange = () => {this.handlePosts(twitterRequest, imageRequest)};
+
+                // A primeira requisição busca todos os tweets com a hashtag fornecida
+                twitterRequest.open(
+                    "GET",
+                    // Parametros adicionais:
+                    // - Excluir retweets
+                    // - Excluir conteúdo potencialmente sensível
+                    // - Ordenas por mais recente
+                    // - Extender os tweets (impedir que acabem em "..." se forem longos)
+                    // - Apenas 10 resultados
+                    "https://cors-anywhere.herokuapp.com/https://api.twitter.com/1.1/search/tweets.json?q=%23" + 
+                        this.state.hashtag +
+                        "%20-filter%3Aretweets%20filter%3Asafe&result_type=recent&tweet_mode=extended&count=10"
+                );
+                // Header HTTP de autorização
+                twitterRequest.setRequestHeader(
+                    "Authorization",
+                    "Bearer AAAAAAAAAAAAAAAAAAAAAH14HQEAAAAAlyRPi0Q1A7u87pMOdF2PPCKY7ME%3D7kmJegvv6xkK8aZH9ZFyr3KX4OVM3mPiyeFqpwDoarFuyMiJre"
+                );
+
+                // A segunda requisição busca apenas tweets com imagens contendo a hashtag fornecida
+                imageRequest.open(
+                    "GET",
+                    // Parametros adicionais:
+                    // - Excluir retweets
+                    // - Excluir conteúdo potencialmente sensível
+                    // - Incluir apenas resultados contendo imagens
+                    // - Ordenas por mais recente
+                    // - Extender os tweets (impedir que acabem em "..." se forem longos)
+                    // - Apenas 10 resultados
+                    "https://cors-anywhere.herokuapp.com/https://api.twitter.com/1.1/search/tweets.json?q=%23" + 
+                        this.state.hashtag +
+                        "%20-filter%3Aretweets%20filter%3Asafe%20filter%3Aimages&result_type=recent&tweet_mode=extended&count=10"
+                );
+                // Header HTTP de autorização
+                imageRequest.setRequestHeader(
+                    "Authorization",
+                    "Bearer AAAAAAAAAAAAAAAAAAAAAH14HQEAAAAAlyRPi0Q1A7u87pMOdF2PPCKY7ME%3D7kmJegvv6xkK8aZH9ZFyr3KX4OVM3mPiyeFqpwDoarFuyMiJre"
+                );
+
+                // Enviar as requisições e aguardar que displayResults() seja chamada
+                twitterRequest.send();
+                imageRequest.send();
             }
         }
     }
 
-    /*
-    // Função que busca tweets com a hashtag fornecida
-    search(hashtag) {
-        // Se uma busca está sendo realizada, instruir o usuário a aguardar
-        if (isSearching) {
-            searchFeedback.textContent = "Aguarde a finalização da busca anterior";
-            return;
-        }
-        // Marcar através da variável global que uma nova busca está em progresso
-        isSearching = true;
-
-        // Função que será atribuída à propriedade "onstatechange" das requisições ao Twitter
-        function displayResults() {
-            // Verificar se ambas as buscas estão completas
-            if (twitterRequest.readyState == 4 && twitterRequest.status == 200 &&
-                imageRequest.readyState == 4 && imageRequest.status == 200) {
-
-                // Transformar os resultados de ambas em JSON
-                let results = JSON.parse(twitterRequest.responseText);
-                let imageResults = JSON.parse(imageRequest.responseText);
-                // Variável que será usada para iterar os resultados
-                let tweet;
-
-                // Se não houver nenhum resultado
-                if (results.statuses.length <= 0 &&
-                    imageResults.statuses.length <= 0) {
-
-                    // Esconder o bloco dos resultados e notificar o usuário
-                    resultBlock.style.display = "";
-                    searchFeedback.textContent = "Não foi encontrado nenhum resultado :(";
-                    // Encerrar a busca
-                    isSearching = false;
-                    return;
-                }
-
-                // Para cada um dos 10 elementos de tweet/imagem no DOM
-                for (let i=0; i<10; i++) {
-                    // Resetar a visibilidade dos elementos em que ela está presente
-                    tweetBlocks[i].classList.remove('tweet_visible');
-                    images[i].classList.remove('image_visible');
-                    // Se houver um resultado para colocar no bloco de tweet "i"
-                    if (i < results.statuses.length) {
-                        // Marcar o tweet com a classe "content"
-                        tweet = results.statuses[i];
-                        tweetBlocks[i].classList.add('tweet_content');
-                        // Atribuir aos elementos as propriedades do resultado
-                        tweetImages[i].src = tweet.user.profile_image_url_https;
-                        tweetNames[i].textContent = tweet.user.name;
-                        tweetNames[i].setAttribute(
-                            'title',
-                            tweetNames[i].textContent
-                        );
-                        tweetHandles[i].textContent = "@" + tweet.user.screen_name;
-                        tweetTexts[i].textContent = tweet.full_text;
-                        tweetLinks[i].parentElement.setAttribute(
-                            'href',
-                            "https://twitter.com/" + tweet.user.screen_name
-                        );
-                        tweetLinks[i].parentElement.tabIndex = "0";
-                    // Se NÃO houver um resultado para colocar no bloco de tweet "i"
-                    } else {
-                        // Remover o marcador de "content" caso ele exista por causa de uma pesquisa anterior
-                        tweetBlocks[i].classList.remove('tweet_content');
-                        tweetLinks[i].parentElement.tabIndex = "-1";
-                    }
-
-                    // Se houver um resultado para colocar no bloco de imagem "i"
-                    if (i < imageResults.statuses.length) {
-                        // Marcar a imagem com a classe "content"
-                        images[i].classList.add('image_content');
-                        // Atribuir aos elementos as propriedades do resultado
-                        images[i].tabIndex = "0"
-                        images[i].setAttribute(
-                            'data-src',
-                            imageResults.statuses[i].entities.media[0].media_url_https
-                        );
-                        images[i].style.background =
-                            "linear-gradient(180deg, #00000000 0%, #000000c4 100%) no-repeat, url(" +
-                            imageResults.statuses[i].entities.media[0].media_url_https + ") no-repeat";
-                        images[i].style.backgroundSize = "100% 40%, cover";
-                        images[i].style.backgroundPosition = "0% 100%, center";
-                        imageUsers[i].textContent = "@" + imageResults.statuses[i].user.screen_name;
-                        imageUsers[i].setAttribute(
-                            'title',
-                            imageUsers[i].textContent
-                        );
-                        imageUsers[i].parentElement.setAttribute(
-                            'href',
-                            "https://twitter.com/" + imageResults.statuses[i].user.screen_name
-                        );
-                        imageUsers[i].parentElement.tabIndex = "0";
-                    // Se NÃO houver um resultado para colocar no bloco de imagem "i"
-                    } else {
-                        // Remover o marcador de "content" caso ele exista por causa de uma pesquisa anterior
-                        images[i].classList.remove('image_content');
-                        images[i].tabIndex = "-1"
-                        imageUsers[i].parentElement.tabIndex = "-1";
-                    }
-                }
-                // Tornar o bloco de resultado visível sobrepondo o CSS
-                resultBlock.style.display = "block";
-                // Mover o scroll para o topo do bloco
-                resultBlock.scrollIntoView({behavior: "smooth", block: "start"});
-                // Atualizar o texto e encerrar a busca
-                searchFeedback.textContent = "";
-                searchText.textContent = hashtag;
-                isSearching = false;
-            }
-        }
-
-        // Criar as duas requisições que serão feitas
-        let twitterRequest = new XMLHttpRequest();
-        let imageRequest = new XMLHttpRequest();
-        // Atribuir a ambas a função displayResults() para quando as duas estiverem prontas
-        twitterRequest.onreadystatechange = function() {
-            displayResults();
-        }
-        imageRequest.onreadystatechange = function() {
-            displayResults();
-        }
-
-        // A primeira requisição busca todos os tweets com a hashtag fornecida
-        twitterRequest.open(
-            "GET",
-            // Parametros adicionais:
-            // - Excluir retweets
-            // - Excluir conteúdo potencialmente sensível
-            // - Ordenas por mais recente
-            // - Extender os tweets (impedir que acabem em "..." se forem longos)
-            // - Apenas 10 resultados
-            "https://cors-anywhere.herokuapp.com/https://api.twitter.com/1.1/search/tweets.json?q=%23" + 
-                hashtag + "%20-filter%3Aretweets%20filter%3Asafe&result_type=recent&tweet_mode=extended&count=10"
-        );
-        // Header HTTP de autorização
-        twitterRequest.setRequestHeader(
-            "Authorization",
-            "Bearer AAAAAAAAAAAAAAAAAAAAAH14HQEAAAAAlyRPi0Q1A7u87pMOdF2PPCKY7ME%3D7kmJegvv6xkK8aZH9ZFyr3KX4OVM3mPiyeFqpwDoarFuyMiJre"
-        );
-
-        // A segunda requisição busca apenas tweets com imagens contendo a hashtag fornecida
-        imageRequest.open(
-            "GET",
-            // Parametros adicionais:
-            // - Excluir retweets
-            // - Excluir conteúdo potencialmente sensível
-            // - Incluir apenas resultados contendo imagens
-            // - Ordenas por mais recente
-            // - Extender os tweets (impedir que acabem em "..." se forem longos)
-            // - Apenas 10 resultados
-            "https://cors-anywhere.herokuapp.com/https://api.twitter.com/1.1/search/tweets.json?q=%23" + 
-                hashtag + "%20-filter%3Aretweets%20filter%3Asafe%20filter%3Aimages&result_type=recent&tweet_mode=extended&count=10"
-        );
-        // Header HTTP de autorização
-        imageRequest.setRequestHeader(
-            "Authorization",
-            "Bearer AAAAAAAAAAAAAAAAAAAAAH14HQEAAAAAlyRPi0Q1A7u87pMOdF2PPCKY7ME%3D7kmJegvv6xkK8aZH9ZFyr3KX4OVM3mPiyeFqpwDoarFuyMiJre"
-        );
-
-        // Enviar as requisições e aguardar que displayResults() seja chamada
-        twitterRequest.send();
-        imageRequest.send();
-    }*/
+    handleScroll() {
+    }
 
 
     componentDidMount() {
+
+        document.querySelector('body').onscroll = this.handleScroll;
         /*
         // Elementos das abas de resultado
         const tabs = document.querySelectorAll('.tab');
@@ -583,7 +515,7 @@ export default class Home extends React.Component {
                 <main className="search">
 
                     {/* Título e texto */}
-                    <h1 className="search__title">Encontre hashtags de maneira fácil.</h1>
+                    <h1 className="search__title" onClick={this.handleScroll}>Encontre hashtags de maneira fácil.</h1>
                     <p className="search__text">
                         Digite o que deseja no campo de buscas e confira os resultados do Twitter abaixo
                     </p>
@@ -615,7 +547,9 @@ export default class Home extends React.Component {
                 </main>
 
                 {/* Bloco dos resultados - visível somente após realizada uma busca */}
-                <div className="result">
+                {this.state.tweetPosts.length > 0 ||
+                this.state.imagePosts.length ?
+                <div className="result" ref={this.resultBlock}>
 
                     {/* Tabs para selecionar qual tipo de resultado é mostrado - visível e necessário somente em mobile */}
                     <div className="result__type">
@@ -635,7 +569,7 @@ export default class Home extends React.Component {
 
                     {/* Texto de feedback da busca */}
                     <p className="result__text">
-                        Exibindo os 10 resultados mais recentes para #<span id="hashtag">natureza</span>
+                        Exibindo os 10 resultados mais recentes para #{this.state.resultHashtag}
                     </p>
 
                     {/* Resultados da busca */}
@@ -643,34 +577,20 @@ export default class Home extends React.Component {
                         {/* Lista de imagens */}
                         <ul className="result__imageList result__imageList_hidden">
                             {/* Imagens 1-10 */}
-                            <Image />
-                            <Image />
-                            <Image />
-                            <Image />
-                            <Image />
-                            <Image />
-                            <Image />
-                            <Image />
-                            <Image />
-                            <Image />
+                            {this.state.imagePosts.map((post) => {
+                                return <Image post={post} key={post.id} />
+                            })}
                         </ul>
 
                         {/* Lista de tweets */}
                         <ul className="result__tweetList">
                             {/* Tweets 1-10 */}
-                            <Tweet />
-                            <Tweet />
-                            <Tweet />
-                            <Tweet />
-                            <Tweet />
-                            <Tweet />
-                            <Tweet />
-                            <Tweet />
-                            <Tweet />
-                            <Tweet />
+                            {this.state.tweetPosts.map((post) => {
+                                return <Tweet post={post} key={post.id} />
+                            })}
                         </ul>
                     </div>
-                </div>
+                </div> : null}
 
                 {/* Rodapé da página */}
                 <footer className="footer">

@@ -405,8 +405,7 @@ body::-webkit-scrollbar-thumb {
 
 /* Bloco dos resultados */
 .result {
-    /* Esconder até que seja revelado por script */
-    display: none;
+    /* Esconder excesso */
     overflow: hidden;
     /* Espaço */
     margin: 0 0 78px;
